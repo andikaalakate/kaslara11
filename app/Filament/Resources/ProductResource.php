@@ -70,6 +70,10 @@ class ProductResource extends Resource
                 TextColumn::make('price')->sortable()
                     ->label('Product Price')->currency('IDR'),
                 TextColumn::make('stock')->sortable(),
+                TextColumn::make('created_at')->sortable()
+                    ->label('Created At'),
+                TextColumn::make('updated_at')->sortable()
+                    ->label('Updated At'),
             ])
             ->filters([
                 //
