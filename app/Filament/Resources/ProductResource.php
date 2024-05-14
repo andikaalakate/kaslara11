@@ -12,10 +12,12 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ProductResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\RawJs;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 
 class ProductResource extends Resource
@@ -28,7 +30,7 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Add Product')
+                Section::make('Product')
                     ->schema([
                         TextInput::make('product_id')->required()
                             ->label('Product Code')
@@ -41,6 +43,9 @@ class ProductResource extends Resource
                         Select::make('category')->options([
                             'Makanan' => 'Makanan', 'Minuman' => 'Minuman', 'Kesehatan' => 'Kesehatan', 'Elektronik' => 'Elektronik', 'Fashion' => 'Fashion', 'Perawatan Tubuh' => 'Perawatan Tubuh', 'Lainnya' => 'Lainnya'
                         ])->required(),
+                        FileUpload::make('image')->required()
+                            ->label('Product Image')
+                            ->image(),
                         TextInput::make('price')->required()
                             ->label('Product Price')
                             ->numeric()
@@ -67,19 +72,28 @@ class ProductResource extends Resource
                 TextColumn::make('category')->sortable()
                     ->searchable()
                     ->label('Product Category'),
+                ImageColumn::make('image')->label('Product Image'),
                 TextColumn::make('price')->sortable()
                     ->label('Product Price')->currency('IDR'),
                 TextColumn::make('stock')->sortable(),
                 TextColumn::make('created_at')->sortable()
-                    ->label('Created At'),
+                    ->label('Created At')
+                    ->dateTime()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')->sortable()
-                    ->label('Updated At'),
+                    ->label('Updated At')
+                    ->dateTime()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
