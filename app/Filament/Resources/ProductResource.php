@@ -19,10 +19,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Support\RawJs;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Storage;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
+
+    protected static ?string $recordTitleAttribute = 'product_name';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -35,6 +38,7 @@ class ProductResource extends Resource
                         TextInput::make('product_id')->required()
                             ->label('Product Code')
                             ->integer()
+                            ->default(fn () => (new static)->generateRandomInteger())
                             ->autofocus()
                             ->maxLength(11),
                         TextInput::make('product_name')->required()
@@ -45,6 +49,20 @@ class ProductResource extends Resource
                         ])->required(),
                         FileUpload::make('image')->required()
                             ->label('Product Image')
+                            ->directory('uploads/images')
+                            ->dehydrateStateUsing(function ($state) {
+                                if (is_string($state)) {
+                                    return json_encode([
+                                        'path' => $state,
+                                        'name' => pathinfo($state, PATHINFO_FILENAME),
+                                        'extension' => pathinfo($state, PATHINFO_EXTENSION),
+                                        'size' => Storage::disk('public')->size($state),
+                                    ]);
+                                }
+                                return $state;
+                            })
+                            ->multiple()
+                            ->imageEditor()
                             ->image(),
                         TextInput::make('price')->required()
                             ->label('Product Price')
@@ -58,6 +76,12 @@ class ProductResource extends Resource
                     ])
             ]);
     }
+
+    protected function generateRandomInteger($length = 11)
+    {
+        return substr(str_shuffle(str_repeat($x = '0123456789', ceil($length / strlen($x)))), 1, $length);
+    }
+
 
     public static function table(Table $table): Table
     {
@@ -107,6 +131,11 @@ class ProductResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
     }
 
     public static function getPages(): array

@@ -16,4 +16,8 @@ class Product extends Model
         'price',
         'stock',
     ];
+
+    protected $casts = [
+        'image' => 'array',
+    ];
 }
